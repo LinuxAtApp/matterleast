@@ -5,10 +5,12 @@ import (
 	"fmt"
 	mm "github.com/mattermost/platform/model"
 )
+
 /*
-main -u <username> -p <password> <server URL> [team name]
+main
+Usage: go run main.go -u <username> -p <password> <server-url> [team-name]
 Authenticates your login information, then gives you your AuthToken.
-If the team name is unentered or invalid main shows valid team names. 
+If the team name is unentered or invalid main shows valid team names.
 */
 func main() {
 	username := flag.String("u", "", "Username")
@@ -22,20 +24,20 @@ func main() {
 		fmt.Println(err)
 		return
 	}
-	
+
 	fmt.Println("Auth successful! Token: ", client.AuthToken)
-	
-	//Gathers all availible teams in a map, 
-	clientResult, clientAppError := client.GetAllTeamListings()
-	teamMap := clientResult.Data.(map[string]*mm.Team)
-	if clientAppError != nil {
-		fmt.Println(clientAppError)
+
+	//Gathers all availible teams in a map,
+	teamListResult, teamListAppError := client.GetAllTeamListings()
+	teamMap := teamListResult.Data.(map[string]*mm.Team)
+	if teamListAppError != nil {
+		fmt.Println(teamListAppError)
 		return
 	}
 	//Validates input team name
 	teamObjMap, teamError := client.GetTeamByName(teamName)
 	if teamError != nil {
-		fmt.Println( teamError )
+		fmt.Println(teamError)
 		return
 	}
 	//Prints availible teams
@@ -44,24 +46,28 @@ func main() {
 		fmt.Println("\t", value.Name)
 	}
 	//Creates team map that can be accessed without string key, then assigns team ID
-	lclTeamMap := make(map[int]*mm.Team)
+	localTeamSlice := make([]*mm.Team, len(teamMap))
 	i := 0
 	for _, value := range teamMap {
-		lclTeamMap[i] = value
+		localTeamSlice[i] = value
+		i++
 	}
-	client.SetTeamId( lclTeamMap[0].Id )
+	client.SetTeamId(localTeamSlice[0].Id)
 	//Gather map of channels availible
-	chnlResult,chnlErr := client.GetChannels( teamObjMap.Etag )
-	if chnlErr != nil {
-		fmt.Println( "Channel Error" )
-		fmt.Println ( chnlErr )
+	channelResult, channelErr := client.GetChannels(teamObjMap.Etag)
+	if channelErr != nil {
+		fmt.Println("Channel Error")
+		fmt.Println(channeslErr)
 		return
 	}
 	//List availible channels (direct messages appear as address string, still in progress)
-	chnlSlice := chnlResult.Data.(*mm.ChannelList)
-	fmt.Print( "\nChannels:\n" )
-	for _, channel := range *chnlSlice {
-		fmt.Println("\t", channel.Name)
+	channelSlice := channelResult.Data.(*mm.ChannelList)
+	fmt.Print("\nChannels:\n")
+	index := 0
+	for _, channel := range *channelSlice {
+		fmt.Print("\t", index, ": ")
+		fmt.Println(channel.Name)
+		index++
 	}
-	
+
 }
