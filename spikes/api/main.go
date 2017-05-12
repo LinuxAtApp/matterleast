@@ -57,7 +57,7 @@ func main() {
 	channelResult, channelErr := client.GetChannels(teamObjMap.Etag)
 	if channelErr != nil {
 		fmt.Println("Channel Error")
-		fmt.Println(channeslErr)
+		fmt.Println(channelErr)
 		return
 	}
 	//List availible channels (direct messages appear as address string, still in progress)
@@ -66,7 +66,7 @@ func main() {
 	index := 0
 	for _, channel := range *channelSlice {
 		fmt.Print("\t", index, ": ")
-		fmt.Println(channel.Name)
+		fmt.Println(channel.DisplayName)
 		index++
 	}
 
