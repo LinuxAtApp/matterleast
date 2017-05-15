@@ -13,6 +13,9 @@ Authenticates your login information, then gives you your AuthToken.
 If the team name is unentered or invalid main shows valid team names.
 */
 func main() {
+	//Adds a  little clarity to the display
+	fmt.Println("---------------------------------------------------------")
+	//Sets up login
 	username := flag.String("u", "", "Username")
 	password := flag.String("p", "", "Password")
 	flag.Parse()
@@ -41,7 +44,7 @@ func main() {
 		return
 	}
 	//Prints availible teams
-	fmt.Println("teams:")
+	fmt.Println("Teams:")
 	for _, value := range teamMap {
 		fmt.Println("\t", value.Name)
 	}
@@ -61,13 +64,37 @@ func main() {
 		return
 	}
 	//List availible channels (direct messages appear as address string, still in progress)
-	channelSlice := channelResult.Data.(*mm.ChannelList)
+	channelMap := channelResult.Data.(*mm.ChannelList)
+	channelSlice := make([]*mm.Channel, len(*channelMap))
 	fmt.Print("\nChannels:\n")
 	index := 0
-	for _, channel := range *channelSlice {
+	for _, channel := range *channelMap {
 		fmt.Print("\t", index, ": ")
-		fmt.Println(channel.DisplayName)
+		channelSlice[index] = channel
+		fmt.Println(channelSlice[index].DisplayName)
 		index++
 	}
+	//TownSquare Channel ID: "d5gpjz3k3fyd7fhzqrafrxg6zr"
+	//Gets mm.PostList since begining of time (?)
+	postSinceDateResult, postsErr := client.GetPostsSince("d5gpjz3k3fyd7fhzqrafrxg6zr", 0)
+	if postsErr != nil {
+		fmt.Println(postsErr)
+	}
+	//Extracts PostList Object
+	postSinceDate := postSinceDateResult.Data.(*mm.PostList)
+	for _, post := range postSinceDate.Posts {
+		//Gets\Extracts username of each post.
+		userResult, userErr := client.GetUser(post.UserId, client.Etag)
+		if userErr != nil {
+			fmt.Println(userErr)
+		}
+		//Prints username and message.
+		user := userResult.Data.(*mm.User)
+		fmt.Println(user.Username)
+		fmt.Println("\t", post.Message, "\n")
+	}
+
+	//Adds a  little clarity to the display
+	fmt.Println("---------------------------------------------------------")
 
 }
