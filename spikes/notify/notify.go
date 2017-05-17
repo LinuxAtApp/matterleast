@@ -7,17 +7,17 @@ import (
 
 //Display a notification.
 func Display(header string, body string, isUrgent bool, iconPath string) {
-	switch runtime.GOSS {
+	switch runtime.GOOS {
 	case "darwin":
 		//Display dialog on MacOS
-		exec.Command("osascript", "-e", "display dialog \""+body+"\" with title \""+summary+"\"").Run()
+        exec.Command("osascript", "-e", "display notification \""+body+"\" with title \""+header+"\"").Run()
 	case "linux":
 		if isUrgent {
 			//Display on Linux if urgent(will open until manually closed)
-			exec.Command("notify-send", "-i", iconPath, summary, body, "-u", "critical").Run()
+			exec.Command("notify-send", "-i", iconPath, header, body, "-u", "critical").Run()
 		} else {
 			//Display on Linux if not urgent
-			exec.Command("notify-send", "-i", iconPath, summary, body).Run()
+			exec.Command("notify-send", "-i", iconPath, header, body).Run()
 		}
 	}
 }

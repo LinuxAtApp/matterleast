@@ -1,6 +1,7 @@
 package main
 
 import (
+	"./spikes/notify"
 	"fmt"
 )
 
