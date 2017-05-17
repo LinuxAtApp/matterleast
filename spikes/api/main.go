@@ -27,9 +27,6 @@ func main() {
 		fmt.Println(err)
 		return
 	}
-
-	fmt.Println("Auth successful! Token: ", client.AuthToken)
-
 	//Gathers all availible teams in a map,
 	teamListResult, teamListAppError := client.GetAllTeamListings()
 	teamMap := teamListResult.Data.(map[string]*mm.Team)
@@ -37,16 +34,19 @@ func main() {
 		fmt.Println(teamListAppError)
 		return
 	}
-	//Validates input team name
-	teamObjMap, teamError := client.GetTeamByName(teamName)
-	if teamError != nil {
-		fmt.Println(teamError)
-		return
-	}
-	//Prints availible teams
-	fmt.Println("Teams:")
-	for _, value := range teamMap {
-		fmt.Println("\t", value.Name)
+	if teamName == nil {
+		//Validates input team name
+		teamObjMap, teamError := client.GetTeamByName(teamName)
+		if teamError != nil {
+			fmt.Println(teamError)
+			return
+		}
+	} else {
+		//Prints availible teams
+		fmt.Println("Teams:")
+		for _, value := range teamMap {
+			fmt.Println("\t", value.Name)
+		}
 	}
 	//Creates team map that can be accessed without string key, then assigns team ID
 	localTeamSlice := make([]*mm.Team, len(teamMap))
