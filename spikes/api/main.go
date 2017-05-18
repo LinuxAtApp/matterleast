@@ -60,14 +60,20 @@ func main() {
 	//List availible channels (direct messages appear as address string, still in progress)
 	channelMap := channelResult.Data.(*mm.ChannelList)
 	channelSlice := make([]*mm.Channel, len(*channelMap))
-	fmt.Print("\nChannels:\n")
+	fmt.Println("Channels:")
 	index := 0
 	for _, channel := range *channelMap {
 		fmt.Print("\t", index, ": ")
 		channelSlice[index] = channel
-		fmt.Println(channelSlice[index].DisplayName)
+		fmt.Print(channelSlice[index].DisplayName)
+		if channelSlice[index].Id == "d5gpjz3k3fyd7fhzqrafrxg6zr" {
+			fmt.Print("*")
+		}
 		index++
+		fmt.Println()
 	}
+	//Add a little clarity
+	fmt.Println("---------------------------------------------------------")
 	//TownSquare Channel ID: "d5gpjz3k3fyd7fhzqrafrxg6zr"
 	//Gets mm.PostList since begining of time (?)
 	postSinceDateResult, postsErr := client.GetPostsSince("d5gpjz3k3fyd7fhzqrafrxg6zr", 0)
@@ -76,7 +82,11 @@ func main() {
 	}
 	//Extracts PostList Object
 	postSinceDate := postSinceDateResult.Data.(*mm.PostList)
-	for _, post := range postSinceDate.Posts {
+	//parses of 4 most recent messages in selected Channel
+	for i := 0; i < 4; i++ {
+		// PostList.Order contains keys to the order of the posts. The most recent post gets stored at position 0
+		postKey := postSinceDate.Order[4-i]
+		post := postSinceDate.Posts[postKey]
 		//Gets\Extracts username of each post.
 		userResult, userErr := client.GetUser(post.UserId, client.Etag)
 		if userErr != nil {
