@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	mm "github.com/mattermost/platform/model"
+	"time"
 )
 
 /*
@@ -15,6 +16,7 @@ If the team name is unentered or invalid main shows valid team names.
 func main() {
 	//Adds a  little clarity to the display
 	fmt.Println("---------------------------------------------------------")
+	defer fmt.Println("---------------------------------------------------------")
 	//Sets up login
 	username := flag.String("u", "", "Username")
 	password := flag.String("p", "", "Password")
@@ -27,9 +29,6 @@ func main() {
 		fmt.Println(err)
 		return
 	}
-
-	fmt.Println("Auth successful! Token: ", client.AuthToken)
-
 	//Gathers all availible teams in a map,
 	teamListResult, teamListAppError := client.GetAllTeamListings()
 	teamMap := teamListResult.Data.(map[string]*mm.Team)
@@ -42,11 +41,6 @@ func main() {
 	if teamError != nil {
 		fmt.Println(teamError)
 		return
-	}
-	//Prints availible teams
-	fmt.Println("Teams:")
-	for _, value := range teamMap {
-		fmt.Println("\t", value.Name)
 	}
 	//Creates team map that can be accessed without string key, then assigns team ID
 	localTeamSlice := make([]*mm.Team, len(teamMap))
@@ -90,11 +84,7 @@ func main() {
 		}
 		//Prints username and message.
 		user := userResult.Data.(*mm.User)
-		fmt.Println(user.Username)
+		fmt.Println(user.Username, time.Unix(post.UpdateAt, 0))
 		fmt.Println("\t", post.Message, "\n")
 	}
-
-	//Adds a  little clarity to the display
-	fmt.Println("---------------------------------------------------------")
-
 }
