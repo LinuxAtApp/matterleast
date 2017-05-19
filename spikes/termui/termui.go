@@ -71,11 +71,17 @@ func handle_cursorright() {
 	}
 }
 
-func handle_enter() {
+func handle_enter() bool {
 	// Can also send message to back end here
-	chat.history = append(chat.history, text_box.text)
-	text_box.text = ""
-	text_box.cursor_pos = 0
+	switch text_box.text {
+		case "/quit":
+			return true
+		default:
+			chat.history = append(chat.history, text_box.text)
+			text_box.text = ""
+			text_box.cursor_pos = 0
+			return false
+	}
 }
 
 // TODO: This function will receive messages to be added to the history
@@ -91,15 +97,16 @@ func main() {
 
 	redraw_all()
 
+	exit := false
 mainloop:
-	for {
+	for !exit {
 		switch ev := termbox.PollEvent(); ev.Type {
 			case termbox.EventKey:
 				switch ev.Key {
 					case termbox.KeyEsc:
 						break mainloop
 					case termbox.KeyEnter:
-						handle_enter()
+						exit = handle_enter()
 					case termbox.KeyBackspace, termbox.KeyBackspace2:
 						handle_backspace()
 					case termbox.KeyArrowLeft:
