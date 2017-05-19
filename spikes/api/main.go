@@ -34,29 +34,31 @@ func main() {
 		fmt.Println(err)
 		return
 	}
-	//Gathers all availible teams in a map,
-	teamListResult, teamListAppError := client.GetAllTeamListings()
-	teamMap := teamListResult.Data.(map[string]*mm.Team)
-	if teamListAppError != nil {
-		fmt.Println(teamListAppError)
+	if teamName == "" {
+		//Gathers all availible teams in a map,
+		teamListResult, teamListAppError := client.GetAllTeamListings()
+		teamMap := teamListResult.Data.(map[string]*mm.Team)
+		if teamListAppError != nil {
+			fmt.Println(teamListAppError)
+			return
+		}
+		fmt.Println("Teams:")
+		for name, value := range teamMap {
+			fmt.Println("\tName:", value.Name, "TeamID:", name)
+		}
 		return
 	}
 	//Validates input team name
-	teamObjMap, teamError := client.GetTeamByName(teamName)
+	selectedTeam, teamError := client.GetTeamByName(teamName)
 	if teamError != nil {
 		fmt.Println(teamError)
 		return
 	}
-	//Creates team map that can be accessed without string key, then assigns team ID
-	localTeamSlice := make([]*mm.Team, len(teamMap))
-	i := 0
-	for _, value := range teamMap {
-		localTeamSlice[i] = value
-		i++
-	}
-	client.SetTeamId(localTeamSlice[0].Id)
+
+	//Use the team provided as an argument
+	client.SetTeamId(selectedTeam.Data.(*mm.Team).Id)
 	//Gather map of channels availible
-	channelResult, channelErr := client.GetChannels(teamObjMap.Etag)
+	channelResult, channelErr := client.GetChannels(selectedTeam.Etag)
 	if channelErr != nil {
 		fmt.Println("Channel Error")
 		fmt.Println(channelErr)
