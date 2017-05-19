@@ -66,17 +66,12 @@ func main() {
 	}
 	//List availible channels (direct messages appear as address string, still in progress)
 	channelMap := channelResult.Data.(*mm.ChannelList)
-	channelSlice := make([]*mm.Channel, len(*channelMap))
 	fmt.Println("Channels:")
-	index := 0
-	for _, channel := range *channelMap {
-		fmt.Print("\t", index, ": ")
-		channelSlice[index] = channel
-		fmt.Print(channelSlice[index].DisplayName)
-		if channelSlice[index].Id == channelId {
+	for id, channel := range *channelMap {
+		fmt.Print("\tChannelID: ", id, " ChannelName: ", channel.DisplayName)
+		if channel.Id == channelId {
 			fmt.Print("*")
 		}
-		index++
 		fmt.Println()
 	}
 	//Add a little clarity
