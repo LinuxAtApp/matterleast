@@ -1,6 +1,10 @@
 package main
 
-import "github.com/nsf/termbox-go"
+import (
+	"github.com/nsf/termbox-go"
+	"time"
+	"sync"
+)
 
 type TextBox struct {
 	text string
@@ -10,6 +14,7 @@ type TextBox struct {
 type ChatHistory struct {
 	history []string
 	authors []string
+	mux sync.Mutex
 }
 
 var text_box = TextBox{}
@@ -30,7 +35,7 @@ func redraw_all() {
 	tbprint(15, y-1,termbox.ColorWhite, termbox.ColorDefault, text_box.text)
 	l := len(chat.history) - 1
 	for i := l; i >= 0; i-- {
-		tbprint(0, y-2-(l-i), termbox.ColorWhite, termbox.ColorDefault, "You: "+chat.history[i])
+		tbprint(0, y-2-(l-i), termbox.ColorWhite, termbox.ColorDefault, chat.authors[i]+": "+chat.history[i])
 	}
 	termbox.SetCursor(15+text_box.cursor_pos,y-1)
 	termbox.Flush()
@@ -72,12 +77,13 @@ func handle_cursorright() {
 }
 
 func handle_enter() bool {
-	// Can also send message to back end here
 	switch text_box.text {
 		case "/quit":
 			return true
 		default:
+			// Can also send message to back end here
 			chat.history = append(chat.history, text_box.text)
+			chat.authors = append(chat.authors, "You")
 			text_box.text = ""
 			text_box.cursor_pos = 0
 			return false
@@ -85,7 +91,26 @@ func handle_enter() bool {
 }
 
 // TODO: This function will receive messages to be added to the history
-func Receive_Message(message string) {
+func Receive_Message(msg, author string) {
+	chat.mux.Lock()
+	chat.history = append(chat.history, msg)
+	chat.authors = append(chat.authors, author)
+	chat.mux.Unlock()
+	termbox.Interrupt()
+}
+
+func someuser1() {
+	for {
+		time.Sleep(5 * time.Second)
+		Receive_Message("Hello", "Guy1")
+	}
+}
+
+func someuser2() {
+	for {
+		time.Sleep(5 * time.Second)
+		Receive_Message("Hello", "Guy2")
+	}
 }
 
 func main() {
@@ -96,6 +121,9 @@ func main() {
 	defer termbox.Close()
 
 	redraw_all()
+
+	go someuser1()
+	go someuser2()
 
 	exit := false
 mainloop:
@@ -121,6 +149,7 @@ mainloop:
 				}
 			case termbox.EventError:
 				panic(ev.Err)
+			case termbox.EventInterrupt:
 		}
 		redraw_all()
 	}
