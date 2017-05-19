@@ -24,7 +24,6 @@ func main() {
 	url := flag.Arg(0)
 	teamName := flag.Arg(1)
 	channelId := "d5gpjz3k3fyd7fhzqrafrxg6zr"
-	userId := "pa7s3o674ib7bnp3bmdm58saca"
 	client := mm.NewClient(url)
 	_, err := client.Login(*username, *password)
 	if err != nil {
@@ -75,14 +74,14 @@ func main() {
 		fmt.Println()
 	}
 	//Add a little clarity
-	fmt.Println("---------------------------------------------------------")	
-	postListResult, err := client.GetPosts(channelId, 0, 0, client.Etag)
-	if err != nil {
-		fmt.Println(err)
+	fmt.Println("---------------------------------------------------------")
+	//Makes a new post then adds it to the server	
+	newPost := makePost(client, channelId, "Ping")
+	_, createPostErr := client.CreatePost(newPost)	
+	if createPostErr != nil {
+		println(err)
 	}
-	postList := postListResult.Data.(*mm.PostList)
-	newPost := makePost(client, channelId, "Testing, please ignore.", userId)
-	postList.AddPost(&newPost)
+	//displays last four posts
 	printLastFourPosts( client, channelId)
 	
 	
@@ -113,27 +112,11 @@ func printLastFourPosts(client *mm.Client, channelId string) {
 		fmt.Println("\t", post.Message)
 	}
 }
-
-func makePost(client *mm.Client, channelId string, message string, userId string) mm.Post {
-	userResult, err := client.GetUser(userId, client.Etag)
-	if err != nil {
-		fmt.Println(err)
-	}
-	timeNow := new(time.Time)
-	user := userResult.Data.(*mm.User)	
-	post := mm.Post{ChannelId: channelId, UserId: user.Id, Message: message, IsPinned: false, CreateAt: timeNow.Unix()}
-	post.MakeNonNil()	
-	post.PreSave()
-	err = post.IsValid()
-	if err != nil {
-		fmt.Println(err)
-	}
-	json := post.ToJson()
-	fmt.Println("json return: ", json, "\n")
-	
+//makePost Returns the address of a new Post 
+func makePost(client *mm.Client, channelId string, message string) *mm.Post {	
+	post := &mm.Post{}
+	post.ChannelId = channelId
+	post.Message = message
 	return post
-		
-	
-	
 }
 
