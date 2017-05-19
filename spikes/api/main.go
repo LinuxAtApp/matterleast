@@ -64,7 +64,7 @@ func main() {
 		fmt.Println(channelErr)
 		return
 	}
-	//List availible channels (direct messages appear as address string, still in progress)
+	//List availible channels (direct messages appear as address string)
 	channelMap := channelResult.Data.(*mm.ChannelList)
 	fmt.Println("Channels:")
 	for id, channel := range *channelMap {
