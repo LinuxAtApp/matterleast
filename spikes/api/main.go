@@ -7,6 +7,10 @@ import (
 	"time"
 )
 
+func printLine() {
+	fmt.Println("---------------------------------------------------------")
+}
+
 /*
 main
 Usage: go run main.go -u <username> -p <password> <server-url> [team-name]
@@ -15,8 +19,8 @@ If the team name is unentered or invalid main shows valid team names.
 */
 func main() {
 	//Adds a  little clarity to the display
-	fmt.Println("---------------------------------------------------------")
-	defer fmt.Println("---------------------------------------------------------")
+	printLine()
+	defer printLine()
 	//Sets up login
 	username := flag.String("u", "", "Username")
 	password := flag.String("p", "", "Password")
@@ -74,17 +78,16 @@ func main() {
 		fmt.Println()
 	}
 	//Add a little clarity
-	fmt.Println("---------------------------------------------------------")
-	//Makes a new post then adds it to the server	
+	printLine()
+	//Makes a new post then adds it to the server
 	newPost := makePost(client, channelId, "Ping")
-	_, createPostErr := client.CreatePost(newPost)	
+	_, createPostErr := client.CreatePost(newPost)
 	if createPostErr != nil {
 		println(err)
 	}
 	//displays last four posts
-	printLastFourPosts( client, channelId)
-	
-	
+	printLastFourPosts(client, channelId)
+
 }
 
 func printLastFourPosts(client *mm.Client, channelId string) {
@@ -112,11 +115,11 @@ func printLastFourPosts(client *mm.Client, channelId string) {
 		fmt.Println("\t", post.Message)
 	}
 }
-//makePost Returns the address of a new Post 
-func makePost(client *mm.Client, channelId string, message string) *mm.Post {	
+
+//makePost Returns the address of a new Post
+func makePost(client *mm.Client, channelId string, message string) *mm.Post {
 	post := &mm.Post{}
 	post.ChannelId = channelId
 	post.Message = message
 	return post
 }
-
