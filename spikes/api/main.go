@@ -23,6 +23,8 @@ func main() {
 	flag.Parse()
 	url := flag.Arg(0)
 	teamName := flag.Arg(1)
+	channelId := "d5gpjz3k3fyd7fhzqrafrxg6zr"
+	userId := "pa7s3o674ib7bnp3bmdm58saca"
 	client := mm.NewClient(url)
 	_, err := client.Login(*username, *password)
 	if err != nil {
@@ -66,26 +68,39 @@ func main() {
 		fmt.Print("\t", index, ": ")
 		channelSlice[index] = channel
 		fmt.Print(channelSlice[index].DisplayName)
-		if channelSlice[index].Id == "d5gpjz3k3fyd7fhzqrafrxg6zr" {
+		if channelSlice[index].Id == channelId {
 			fmt.Print("*")
 		}
 		index++
 		fmt.Println()
 	}
 	//Add a little clarity
-	fmt.Println("---------------------------------------------------------")
+	fmt.Println("---------------------------------------------------------")	
+	postListResult, err := client.GetPosts(channelId, 0, 0, client.Etag)
+	if err != nil {
+		fmt.Println(err)
+	}
+	postList := postListResult.Data.(*mm.PostList)
+	newPost := makePost(client, channelId, "Testing, please ignore.", userId)
+	postList.AddPost(&newPost)
+	printLastFourPosts( client, channelId)
+	
+	
+}
+
+func printLastFourPosts(client *mm.Client, channelId string) {
 	//TownSquare Channel ID: "d5gpjz3k3fyd7fhzqrafrxg6zr"
 	//Gets mm.PostList since begining of time (?)
-	postSinceDateResult, postsErr := client.GetPostsSince("d5gpjz3k3fyd7fhzqrafrxg6zr", 0)
+	postSinceDateResult, postsErr := client.GetPostsSince(channelId, 0)
 	if postsErr != nil {
 		fmt.Println(postsErr)
 	}
 	//Extracts PostList Object
 	postSinceDate := postSinceDateResult.Data.(*mm.PostList)
-	//parses of 4 most recent messages in selected Channel
+	//Parses of 4 most recent messages in selected Channel
 	for i := 0; i < 4; i++ {
 		// PostList.Order contains keys to the order of the posts. The most recent post gets stored at position 0
-		postKey := postSinceDate.Order[4-i]
+		postKey := postSinceDate.Order[i]
 		post := postSinceDate.Posts[postKey]
 		//Gets\Extracts username of each post.
 		userResult, userErr := client.GetUser(post.UserId, client.Etag)
@@ -94,7 +109,31 @@ func main() {
 		}
 		//Prints username and message.
 		user := userResult.Data.(*mm.User)
-		fmt.Println(user.Username, time.Unix(post.UpdateAt, 0))
-		fmt.Println("\t", post.Message, "\n")
+		fmt.Println(user.Username, user.Id, time.Unix(post.UpdateAt, 0))
+		fmt.Println("\t", post.Message)
 	}
 }
+
+func makePost(client *mm.Client, channelId string, message string, userId string) mm.Post {
+	userResult, err := client.GetUser(userId, client.Etag)
+	if err != nil {
+		fmt.Println(err)
+	}
+	timeNow := new(time.Time)
+	user := userResult.Data.(*mm.User)	
+	post := mm.Post{ChannelId: channelId, UserId: user.Id, Message: message, IsPinned: false, CreateAt: timeNow.Unix()}
+	post.MakeNonNil()	
+	post.PreSave()
+	err = post.IsValid()
+	if err != nil {
+		fmt.Println(err)
+	}
+	json := post.ToJson()
+	fmt.Println("json return: ", json, "\n")
+	
+	return post
+		
+	
+	
+}
+
