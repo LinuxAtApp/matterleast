@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"path"
@@ -37,4 +38,9 @@ func main() {
 	bytesRead, err := configFile.Read(data)
 	fatal(err)
 
+	config := make(map[string]string)
+	err = json.Unmarshal(data[:bytesRead], &config)
+	fatal(err)
+
+	fmt.Println(config)
 }
