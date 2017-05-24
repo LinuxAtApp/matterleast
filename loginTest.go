@@ -6,12 +6,12 @@ import (
 	"github.com/LinuxAtApp/matterleast/servercom"
 )
 func main() {
-	username := flag.String("u","","Username")
+	username := flag.String("u", "", "Username")
 	password := flag.String("p", "", "Password")
 	flag.Parse()
 	url := flag.Arg(0)
-	client:= servercom.Startup(url, username, password)
-	if servercom.Connected {
+	client:= *servercom.Startup(url, username, password)
+	if servercom.Connected(client) {
 		fmt.Println("Connection Successful!")
 	}
 }
