@@ -3,7 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
-	"servercom"
+	"github.com/LinuxAtApp/matterleast/servercom"
 )
 func main() {
 	username := flag.String("u","","Username")
