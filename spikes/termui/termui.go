@@ -9,15 +9,17 @@ import (
 type TextBox struct {
 	text string
 	cursor_pos int
+	size int
 }
 
+//TODO: Add a datalog file
 type ChatHistory struct {
 	history []string
 	authors []string
 	mux sync.Mutex
 }
 
-var text_box = TextBox{}
+var text_box = TextBox{ "", 0, 1 }
 var chat = ChatHistory{}
 
 func tbprint(x, y int, fg, bg termbox.Attribute, msg string) {
@@ -27,17 +29,39 @@ func tbprint(x, y int, fg, bg termbox.Attribute, msg string) {
 	}
 }
 
+//TODO: Line Wrapping and scrolling
 func redraw_all() {
 	const coldef = termbox.ColorDefault
 	termbox.Clear(coldef, coldef)
-	_, y := termbox.Size()
-	tbprint(0,y-1,termbox.ColorWhite, termbox.ColorDefault, "Enter Message>")
-	tbprint(15, y-1,termbox.ColorWhite, termbox.ColorDefault, text_box.text)
-	l := len(chat.history) - 1
-	for i := l; i >= 0; i-- {
-		tbprint(0, y-2-(l-i), termbox.ColorWhite, termbox.ColorDefault, chat.authors[i]+": "+chat.history[i])
+	x, y := termbox.Size()
+
+	if len(text_box.text) + 15 < x {
+		text_box.size = 1
+		tbprint(0,y-1,termbox.ColorWhite, termbox.ColorDefault, "Enter Message>")
+		tbprint(15, y-1,termbox.ColorWhite, termbox.ColorDefault, text_box.text)
+		termbox.SetCursor(15+text_box.cursor_pos,y-1)
+	} else {
+		text_box.size = 2
+		tbprint(0,y-2,termbox.ColorWhite, termbox.ColorDefault, "Enter Message>")
+		tbprint(15, y-2,termbox.ColorWhite, termbox.ColorDefault, text_box.text[:x-15])
+		tbprint(4, y-1,termbox.ColorWhite, termbox.ColorDefault, text_box.text[x-15:])
+		termbox.SetCursor(19+text_box.cursor_pos-x,y-1)
 	}
-	termbox.SetCursor(15+text_box.cursor_pos,y-1)
+
+	l := len(chat.history) - 1
+	padding := 0
+	for i := l; i >= 0; i-- {
+		if len(chat.history[i]) + len(chat.authors[i]) + 2 >= x {
+			padding++
+			tbprint(0, y-1-(l-i)-text_box.size-padding, termbox.ColorWhite, termbox.ColorDefault,
+							chat.authors[i]+": "+chat.history[i][:x-2-len(chat.authors[i])])
+			tbprint(0, y-(l-i)-text_box.size-padding, termbox.ColorWhite, termbox.ColorDefault,
+							"    "+chat.history[i][x-2-len(chat.authors[i]):])
+		} else {
+			tbprint(0, y-1-(l-i)-text_box.size-padding, termbox.ColorWhite, termbox.ColorDefault,
+							chat.authors[i]+": "+chat.history[i])
+		}
+	}
 	termbox.Flush()
 }
 
