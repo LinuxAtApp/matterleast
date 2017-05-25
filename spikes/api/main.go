@@ -4,7 +4,12 @@ import (
 	"flag"
 	"fmt"
 	mm "github.com/mattermost/platform/model"
+	"time"
 )
+
+func printLine() {
+	fmt.Println("---------------------------------------------------------")
+}
 
 /*
 main
@@ -14,75 +19,88 @@ If the team name is unentered or invalid main shows valid team names.
 */
 func main() {
 	//Adds a  little clarity to the display
-	fmt.Println("---------------------------------------------------------")
+	printLine()
+	defer printLine()
 	//Sets up login
 	username := flag.String("u", "", "Username")
 	password := flag.String("p", "", "Password")
 	flag.Parse()
 	url := flag.Arg(0)
 	teamName := flag.Arg(1)
+	channelId := "d5gpjz3k3fyd7fhzqrafrxg6zr"
 	client := mm.NewClient(url)
 	_, err := client.Login(*username, *password)
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
-	//Gathers all availible teams in a map,
-	teamListResult, teamListAppError := client.GetAllTeamListings()
-	teamMap := teamListResult.Data.(map[string]*mm.Team)
-	if teamListAppError != nil {
-		fmt.Println(teamListAppError)
-		return
-	}
-	if teamName == nil {
-		//Validates input team name
-		teamObjMap, teamError := client.GetTeamByName(teamName)
-		if teamError != nil {
-			fmt.Println(teamError)
+	if teamName == "" {
+		//Gathers all availible teams in a map,
+		teamListResult, teamListAppError := client.GetAllTeamListings()
+		teamMap := teamListResult.Data.(map[string]*mm.Team)
+		if teamListAppError != nil {
+			fmt.Println(teamListAppError)
 			return
 		}
-	} else {
-		//Prints availible teams
 		fmt.Println("Teams:")
-		for _, value := range teamMap {
-			fmt.Println("\t", value.Name)
+		for name, value := range teamMap {
+			fmt.Println("\tName:", value.Name, "TeamID:", name)
 		}
+		return
 	}
-	//Creates team map that can be accessed without string key, then assigns team ID
-	localTeamSlice := make([]*mm.Team, len(teamMap))
-	i := 0
-	for _, value := range teamMap {
-		localTeamSlice[i] = value
-		i++
+	//Validates input team name
+	selectedTeam, teamError := client.GetTeamByName(teamName)
+	if teamError != nil {
+		fmt.Println(teamError)
+		return
 	}
-	client.SetTeamId(localTeamSlice[0].Id)
+
+	//Use the team provided as an argument
+	client.SetTeamId(selectedTeam.Data.(*mm.Team).Id)
 	//Gather map of channels availible
-	channelResult, channelErr := client.GetChannels(teamObjMap.Etag)
+	channelResult, channelErr := client.GetChannels(selectedTeam.Etag)
 	if channelErr != nil {
 		fmt.Println("Channel Error")
 		fmt.Println(channelErr)
 		return
 	}
-	//List availible channels (direct messages appear as address string, still in progress)
+	//List availible channels (direct messages appear as address string)
 	channelMap := channelResult.Data.(*mm.ChannelList)
-	channelSlice := make([]*mm.Channel, len(*channelMap))
-	fmt.Print("\nChannels:\n")
-	index := 0
-	for _, channel := range *channelMap {
-		fmt.Print("\t", index, ": ")
-		channelSlice[index] = channel
-		fmt.Println(channelSlice[index].DisplayName)
-		index++
+	fmt.Println("Channels:")
+	for id, channel := range *channelMap {
+		fmt.Print("\tChannelID: ", id, " ChannelName: ", channel.DisplayName)
+		if channel.Id == channelId {
+			fmt.Print("*")
+		}
+		fmt.Println()
 	}
+	//Add a little clarity
+	printLine()
+	//Makes a new post then adds it to the server
+	newPost := makePost(client, channelId, "Ping")
+	_, createPostErr := client.CreatePost(newPost)
+	if createPostErr != nil {
+		println(err)
+	}
+	//displays last four posts
+	printLastFourPosts(client, channelId)
+
+}
+
+func printLastFourPosts(client *mm.Client, channelId string) {
 	//TownSquare Channel ID: "d5gpjz3k3fyd7fhzqrafrxg6zr"
 	//Gets mm.PostList since begining of time (?)
-	postSinceDateResult, postsErr := client.GetPostsSince("d5gpjz3k3fyd7fhzqrafrxg6zr", 0)
+	postSinceDateResult, postsErr := client.GetPostsSince(channelId, 0)
 	if postsErr != nil {
 		fmt.Println(postsErr)
 	}
 	//Extracts PostList Object
 	postSinceDate := postSinceDateResult.Data.(*mm.PostList)
-	for _, post := range postSinceDate.Posts {
+	//Parses of 4 most recent messages in selected Channel
+	for i := 0; i < 4; i++ {
+		// PostList.Order contains keys to the order of the posts. The most recent post gets stored at position 0
+		postKey := postSinceDate.Order[i]
+		post := postSinceDate.Posts[postKey]
 		//Gets\Extracts username of each post.
 		userResult, userErr := client.GetUser(post.UserId, client.Etag)
 		if userErr != nil {
@@ -90,11 +108,15 @@ func main() {
 		}
 		//Prints username and message.
 		user := userResult.Data.(*mm.User)
-		fmt.Println(user.Username)
-		fmt.Println("\t", post.Message, "\n")
+		fmt.Println(user.Username, user.Id, time.Unix(post.UpdateAt, 0))
+		fmt.Println("\t", post.Message)
 	}
+}
 
-	//Adds a  little clarity to the display
-	fmt.Println("---------------------------------------------------------")
-
+//makePost Returns the address of a new Post
+func makePost(client *mm.Client, channelId string, message string) *mm.Post {
+	post := &mm.Post{}
+	post.ChannelId = channelId
+	post.Message = message
+	return post
 }

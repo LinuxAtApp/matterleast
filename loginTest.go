@@ -10,8 +10,10 @@ func main() {
 	password := flag.String("p", "", "Password")
 	flag.Parse()
 	url := flag.Arg(0)
-	client:= *servercom.Startup(url, username, password)
+	client:= *servercom.Startup(url, *username, *password)
 	if servercom.Connected(client) {
-		fmt.Println("Connection Successful!")
+		fmt.Println("*Connection Successful!*")
+	} else {
+		fmt.Println("*You are not connected.*")
 	}
 }
