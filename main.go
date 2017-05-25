@@ -10,6 +10,7 @@ Main usage: `go run main.go -u <username> -p <password> <url>
 Package demontrates simple login functions using the servercom package's methods.
 */
 func main() {
+	fmt.Println("matterleast")
 	username := flag.String("u", "", "Username")
 	password := flag.String("p", "", "Password")
 	flag.Parse()
