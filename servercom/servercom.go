@@ -1,26 +1,31 @@
-package servercom
+package serverCom
 
 import (
-	mm "github.com/mattermost/platform/model"
 	"fmt"
+	mm "github.com/mattermost/platform/model"
 )
+
+type ServerCom struct {
+	Client *mm.Client
+}
+
 /*
-Startup accepts the url and login credentials for a user, and returns a pointer to a logged in client.
+Startup accepts the url and login credentials for a user, and returns a new serverCom struct.
 */
-func Startup(url string, username string, password string) *mm.Client {
-	client := mm.NewClient(url)
-	_, err := client.Login(username, password)
+func Startup(url string, username string, password string) ServerCom {
+	ServerCom := ServerCom{mm.NewClient(url)}
+	_, err := ServerCom.Client.Login(username, password)
 	if err != nil {
 		fmt.Println(err)
 	}
-	return client
+	return ServerCom
 }
+
 /*
-Connected accepts a mattermost client as an arguement, and returns true if the client has a
-login Authentication Token.
+Connected returns true if the client has a login Authentication Token.
 */
-func Connected(client mm.Client) bool {
-	if client.AuthToken != "" {
+func (sc ServerCom) Connected() bool {
+	if sc.Client.AuthToken != "" {
 		return true
 	}
 	return false
