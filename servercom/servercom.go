@@ -6,14 +6,15 @@ import (
 )
 
 type ServerCom struct {
-	Client *mm.Client
+	Client    *mm.Client
+	channelId string
 }
 
 /*
 Startup accepts the url and login credentials for a user, and returns a new serverCom struct.
 */
 func Startup(url string, username string, password string) ServerCom {
-	ServerCom := ServerCom{mm.NewClient(url)}
+	ServerCom := ServerCom{Client: mm.NewClient(url)}
 	_, err := ServerCom.Client.Login(username, password)
 	if err != nil {
 		fmt.Println(err)
@@ -29,4 +30,30 @@ func (sc ServerCom) Connected() bool {
 		return true
 	}
 	return false
+}
+
+/*
+SetTeam set ServerCom's client team ID using the team name.
+*/
+func (sc ServerCom) SetTeam(teamName string) *mm.AppError {
+	team, err := sc.Client.GetTeamByName(teamName)
+	if err != nil {
+		return err
+	}
+	sc.Client.SetTeamId(team.Data.(*mm.Team).Id)
+	return nil
+}
+
+/*
+NewPost creates and pushes a post to the channel in channelId.
+*/
+func (sc ServerCom) NewPost(message string) *mm.AppError {
+	post := &mm.Post{}
+	post.ChannelId = sc.channelId
+	post.Message = message
+	_, err := sc.Client.CreatePost(post)
+	if err != nil {
+		return (err)
+	}
+	return nil
 }
