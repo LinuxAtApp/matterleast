@@ -16,6 +16,9 @@ func main() {
 	password := flag.String("p", "", "Password")
 	flag.Parse()
 	url := flag.Arg(0)
+	if (url == "" || *username == "" || *password == "") {
+		return
+	}
 	//Creates client and logs user in.
 	serverCom := client.Startup(url, *username, *password)
 	//Tests if login was successful.
