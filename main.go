@@ -24,4 +24,8 @@ func main() {
 	} else {
 		fmt.Println("*You are not connected.*")
 	}
+	serverCom.PrintTeams()
+	serverCom.SetTeam("linuxapp")
+	serverCom.PrintChannels()
+	serverCom.SetChannel("town-square")
 }
