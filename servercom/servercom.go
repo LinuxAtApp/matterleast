@@ -94,7 +94,7 @@ func (sc *ServerCom) PrintChannels() {
 	}
 }
 //GetChannelData returns a slice containing every post in a channel.
-//The posts are in reverse order, so the oldest post is at the [0] index.
+//The posts are in order, so the newest post is at the [0] index.
 func (sc *ServerCom) GetChannelData() []*mm.Post {
 	//TownSquare Channel ID: "d5gpjz3k3fyd7fhzqrafrxg6zr"
 	//Gets mm.PostList since begining of time

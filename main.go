@@ -16,6 +16,7 @@ func main() {
 	password := flag.String("p", "", "Password")
 	flag.Parse()
 	url := flag.Arg(0)
+	//if any login data is missing main.go cleanly exits.
 	if (url == "" || *username == "" || *password == "") {
 		return
 	}
