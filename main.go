@@ -28,4 +28,9 @@ func main() {
 	serverCom.SetTeam("linuxapp")
 	serverCom.PrintChannels()
 	serverCom.SetChannel("town-square")
+	fmt.Println("Channel [", serverCom.Channel.DisplayName, "] data:\n")
+	for _, post := range serverCom.GetSelectPosts(5,3) {
+		fmt.Println(post.Message,"\n")
+	}
 }
+
