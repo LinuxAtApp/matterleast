@@ -54,30 +54,30 @@ func (o osxNotificator) push(title string, text string, sound bool, iconPath str
 	term_notif := CheckTermNotif()
 	os_version_check := CheckMacOSVersion()
 
-    // String sound argument set if sound boolean is true
-    soundArg := ""
+	// String sound argument set if sound boolean is true
+	soundArg := ""
 
 	// if terminal-notifier exists, use it.
 	// else, fall back to osascript. (Mavericks and later.)
 	if term_notif == true {
-        // if sound true, set argument
-        if(sound) {
-            soundArg += "\"default\""
-        }
+		// if sound true, set argument
+		if sound {
+			soundArg += "\"default\""
+		}
 		return exec.Command("terminal-notifier", "-title", o.AppName, "-message", text, "-subtitle", title, "-sound", soundArg)
 	} else if os_version_check == true {
-        // if sound true, set argument
-        if(sound) {
-            soundArg += "sound name \"beep\""
-        }
+		// if sound true, set argument
+		if sound {
+			soundArg += "sound name \"beep\""
+		}
 		notification := fmt.Sprintf("display notification \"%s\" with title \"%s\" subtitle \"%s\"", text, o.AppName, title, soundArg)
 		return exec.Command("osascript", "-e", notification)
 	}
 
-    // if sound true, set argument
-    if(sound)  {
-        return exec.Command("growlnotify", "-n", o.AppName, "--image", iconPath, "-m", title)
-    }
+	// if sound true, set argument
+	if sound {
+		return exec.Command("growlnotify", "-n", o.AppName, "--image", iconPath, "-m", title)
+	}
 
 	// finally falls back to growlnotify.
 	return exec.Command("growlnotify", "-n", o.AppName, "--image", iconPath, "-m", title)
@@ -90,19 +90,21 @@ func (o osxNotificator) pushCritical(title string, text string, sound bool, icon
 
 	term_notif := CheckTermNotif()
 	os_version_check := CheckMacOSVersion()
-    
+
 	if term_notif == true {
 		// timeout set to 30 seconds, to show the importance of the notification
-        command := fmt.Sprintf("terminal-notifier", "-title", o.AppName, "-message", text, "-subtitle", title, "-timeout", "30")
-        if(sound) {
-            return exec.Command(command, "-sound default")
-        }
-        return exec.Command(command);
+		command := fmt.Sprintf("terminal-notifier", "-title", o.AppName, "-message", text, "-subtitle", title, "-timeout", "30")
+		if sound {
+			return exec.Command(command, "-sound default")
+		}
+		return exec.Command(command)
 	} else if os_version_check == true {
 		notification := fmt.Sprintf("display notification \"%s\" with title \"%s\" subtitle \"%s\"", text, o.AppName, title)
 		return exec.Command("osascript", "-e", notification)
 	}
-
+	if sound {
+		return exec.Command("growlnotify", "-n", o.AppName, "--image", iconPath, "-m", title, "-e", "default")
+	}
 	return exec.Command("growlnotify", "-n", o.AppName, "--image", iconPath, "-m", title)
 
 }
@@ -110,35 +112,35 @@ func (o osxNotificator) pushCritical(title string, text string, sound bool, icon
 type linuxNotificator struct{}
 
 func (l linuxNotificator) push(title string, text string, sound bool, iconPath string) *exec.Cmd {
-	if(sound) {
-        return exec.Command("notify-send", "-i", iconPath, title, text)
-    }
-    return exec.Command("notify-send", "-i", iconPath, title, text)
+	if sound {
+		return exec.Command("notify-send", "-i", iconPath, title, text, "-e", "default")
+	}
+	return exec.Command("notify-send", "-i", iconPath, title, text)
 }
 
 // Causes the notification to stick around until clicked.
 func (l linuxNotificator) pushCritical(title string, text string, sound bool, iconPath string) *exec.Cmd {
-	if(sound) {
-        return exec.Command("notify-send", "-i", iconPath, title, text, "-u", "critical", "-e", "default")
-    }
-    return exec.Command("notify-send", "-i", iconPath, title, text, "-u", "critical");
+	if sound {
+		return exec.Command("notify-send", "-i", iconPath, title, text, "-u", "critical", "-e", "default")
+	}
+	return exec.Command("notify-send", "-i", iconPath, title, text, "-u", "critical")
 }
 
 type windowsNotificator struct{}
 
 func (w windowsNotificator) push(title string, text string, sound bool, iconPath string) *exec.Cmd {
-	if(sound) {
-        return exec.Command("growlnotify", "/i:", iconPath, "/t:", title, text, "-e", "default")
-    }
-    return exec.Command("growlnotify", "/i:", iconPath, "/t:", title, text)
+	if sound {
+		return exec.Command("growlnotify", "/i:", iconPath, "/t:", title, text, "-e", "default")
+	}
+	return exec.Command("growlnotify", "/i:", iconPath, "/t:", title, text)
 }
 
 // Causes the notification to stick around until clicked.
 func (w windowsNotificator) pushCritical(title string, text string, sound bool, iconPath string) *exec.Cmd {
-	if(sound) {
-        return exec.Command("notify-send", "-i", iconPath, title, text, "/s", "true", "/p", "2", "beep")
-    }
-    return exec.Command("notify-send", "-i", iconPath, title, text, "/s", "true", "/p", "2")
+	if sound {
+		return exec.Command("notify-send", "-i", iconPath, title, text, "/s", "true", "/p", "2", "beep")
+	}
+	return exec.Command("notify-send", "-i", iconPath, title, text, "/s", "true", "/p", "2")
 }
 
 func New(o Options) *Notificator {

@@ -1,7 +1,7 @@
 package main
 
 import (
-	"../../notificator"
+	"matterleast/spikes/notify/notificator"
 )
 
 var notify *notificator.Notificator
