@@ -1,9 +1,11 @@
 package main
 
 import (
+	"github.com/LinuxAtApp/matterleast/spikes/termui/datalog"
 	"github.com/nsf/termbox-go"
+	"unicode/utf8"
+	"strconv"
 	"time"
-	"sync"
 )
 
 type TextBox struct {
@@ -12,15 +14,8 @@ type TextBox struct {
 	size int
 }
 
-//TODO: Add a datalog file
-type ChatHistory struct {
-	history []string
-	authors []string
-	mux sync.Mutex
-}
-
-var text_box = TextBox{ "", 0, 1 }
-var chat = ChatHistory{}
+var text_box = TextBox{ size: 1 }
+var chat = &datalog.TownSquare
 
 func tbprint(x, y int, fg, bg termbox.Attribute, msg string) {
 	for _, c := range msg {
@@ -37,29 +32,29 @@ func redraw_all() {
 
 	if len(text_box.text) + 15 < x {
 		text_box.size = 1
-		tbprint(0,y-1,termbox.ColorWhite, termbox.ColorDefault, "Enter Message>")
+		tbprint(0,y-1,termbox.ColorGreen, termbox.ColorDefault, chat.Name+">")
 		tbprint(15, y-1,termbox.ColorWhite, termbox.ColorDefault, text_box.text)
 		termbox.SetCursor(15+text_box.cursor_pos,y-1)
 	} else {
 		text_box.size = 2
-		tbprint(0,y-2,termbox.ColorWhite, termbox.ColorDefault, "Enter Message>")
+		tbprint(0,y-2,termbox.ColorGreen, termbox.ColorDefault, chat.Name+">")
 		tbprint(15, y-2,termbox.ColorWhite, termbox.ColorDefault, text_box.text[:x-15])
 		tbprint(4, y-1,termbox.ColorWhite, termbox.ColorDefault, text_box.text[x-15:])
 		termbox.SetCursor(19+text_box.cursor_pos-x,y-1)
 	}
 
-	l := len(chat.history) - 1
+	l := len(chat.History) - 1
 	padding := 0
 	for i := l; i >= 0; i-- {
-		if len(chat.history[i]) + len(chat.authors[i]) + 2 >= x {
+		if len(chat.History[i]) + len(chat.Authors[i]) + 2 >= x {
 			padding++
 			tbprint(0, y-1-(l-i)-text_box.size-padding, termbox.ColorWhite, termbox.ColorDefault,
-							chat.authors[i]+": "+chat.history[i][:x-2-len(chat.authors[i])])
+							chat.Authors[i]+": "+chat.History[i][:x-2-len(chat.Authors[i])])
 			tbprint(0, y-(l-i)-text_box.size-padding, termbox.ColorWhite, termbox.ColorDefault,
-							"    "+chat.history[i][x-2-len(chat.authors[i]):])
+							"    "+chat.History[i][x-2-len(chat.Authors[i]):])
 		} else {
 			tbprint(0, y-1-(l-i)-text_box.size-padding, termbox.ColorWhite, termbox.ColorDefault,
-							chat.authors[i]+": "+chat.history[i])
+							chat.Authors[i]+": "+chat.History[i])
 		}
 	}
 	termbox.Flush()
@@ -77,13 +72,16 @@ func handle_backspace() {
 }
 
 func handle_textinput(ch rune) {
+	// Added this to force utf8, however it may not be necessary
+	buf := make([]byte, 1)
+	utf8.EncodeRune(buf, ch)
 	switch {
 		case len(text_box.text) == text_box.cursor_pos:
-			text_box.text += string(ch)
+			text_box.text += string(buf)
 		case text_box.cursor_pos == 0:
-			text_box.text = string(ch) + text_box.text
+			text_box.text = string(buf) + text_box.text
 		default:
-			text_box.text = text_box.text[:text_box.cursor_pos] + string(ch) + text_box.text[text_box.cursor_pos:]
+			text_box.text = text_box.text[:text_box.cursor_pos] + string(buf) + text_box.text[text_box.cursor_pos:]
 	}
 	text_box.cursor_pos++
 }
@@ -101,39 +99,64 @@ func handle_cursorright() {
 }
 
 func handle_enter() bool {
-	switch text_box.text {
-		case "/quit":
-			return true
+	if text_box.text == "" {
+		return false
+	}
+	switch text_box.text[0] {
+		case '/':
+			if text_box.text == "/quit" {
+				return true
+			}
+			if text_box.text[:6] == "/enter" {
+				switch text_box.text[7:] {
+					case "TownSquare":
+						chat = &datalog.TownSquare
+					case "OffTopic":
+						chat = &datalog.OffTopic
+					case "TermDev":
+						chat = &datalog.TermDev
+				}
+				chat.History = append(chat.History, "Switched channels")
+				chat.Authors = append(chat.Authors, "System")
+				text_box.text = ""
+				text_box.cursor_pos = 0
+			}
 		default:
 			// Can also send message to back end here
-			chat.history = append(chat.history, text_box.text)
-			chat.authors = append(chat.authors, "You")
+			chat.Mux.Lock()
+			chat.History = append(chat.History, text_box.text)
+			chat.Authors = append(chat.Authors, "You")
+			chat.Mux.Unlock()
 			text_box.text = ""
 			text_box.cursor_pos = 0
-			return false
 	}
+	return false
 }
 
 // TODO: This function will receive messages to be added to the history
 func Receive_Message(msg, author string) {
-	chat.mux.Lock()
-	chat.history = append(chat.history, msg)
-	chat.authors = append(chat.authors, author)
-	chat.mux.Unlock()
+	chat.Mux.Lock()
+	chat.History = append(chat.History, msg)
+	chat.Authors = append(chat.Authors, author)
+	chat.Mux.Unlock()
 	termbox.Interrupt()
 }
 
 func someuser1() {
+	count := 0
 	for {
 		time.Sleep(5 * time.Second)
-		Receive_Message("Hello", "Guy1")
+		Receive_Message("Hello"+strconv.Itoa(count), "Guy1")
+		count++
 	}
 }
 
 func someuser2() {
+	count := 0
 	for {
-		time.Sleep(5 * time.Second)
-		Receive_Message("Hello", "Guy2")
+		time.Sleep(4 * time.Second)
+		Receive_Message("Hello"+strconv.Itoa(count), "Guy2")
+		count++
 	}
 }
 
