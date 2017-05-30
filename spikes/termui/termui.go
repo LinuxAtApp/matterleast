@@ -30,17 +30,18 @@ func redraw_all() {
 	termbox.Clear(coldef, coldef)
 	x, y := termbox.Size()
 
-	if len(text_box.text) + 15 < x {
+	if len(text_box.text) + len(chat.Name)+2 < x {
 		text_box.size = 1
 		tbprint(0,y-1,termbox.ColorGreen, termbox.ColorDefault, chat.Name+">")
-		tbprint(15, y-1,termbox.ColorWhite, termbox.ColorDefault, text_box.text)
-		termbox.SetCursor(15+text_box.cursor_pos,y-1)
+		tbprint(len(chat.Name)+2, y-1,termbox.ColorWhite, termbox.ColorDefault, text_box.text)
+		termbox.SetCursor(len(chat.Name)+2+text_box.cursor_pos,y-1)
 	} else {
 		text_box.size = 2
 		tbprint(0,y-2,termbox.ColorGreen, termbox.ColorDefault, chat.Name+">")
-		tbprint(15, y-2,termbox.ColorWhite, termbox.ColorDefault, text_box.text[:x-15])
-		tbprint(4, y-1,termbox.ColorWhite, termbox.ColorDefault, text_box.text[x-15:])
-		termbox.SetCursor(19+text_box.cursor_pos-x,y-1)
+		tbprint(len(chat.Name)+2, y-2,termbox.ColorWhite, termbox.ColorDefault,
+						text_box.text[:x-len(chat.Name)-2])
+		tbprint(4, y-1,termbox.ColorWhite, termbox.ColorDefault, text_box.text[x-len(chat.Name)-2:])
+		termbox.SetCursor(len(chat.Name)+6+text_box.cursor_pos-x,y-1)
 	}
 
 	l := len(chat.History) - 1
