@@ -1,7 +1,7 @@
 package main
 
 import (
-	"matterleast/spikes/notify/notificator"
+	"github.com/LinuxAtApp/matterleast/spikes/notify/notificator"
 )
 
 var notify *notificator.Notificator
