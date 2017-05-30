@@ -138,7 +138,7 @@ func (w windowsNotificator) push(title string, text string, sound bool, iconPath
 // Causes the notification to stick around until clicked.
 func (w windowsNotificator) pushCritical(title string, text string, sound bool, iconPath string) *exec.Cmd {
 	if sound {
-		return exec.Command("notify-send", "-i", iconPath, title, text, "/s", "true", "/p", "2", "beep")
+		return exec.Command("notify-send", "-i", iconPath, title, text, "/s", "true", "/p", "2", "-e", "default")
 	}
 	return exec.Command("notify-send", "-i", iconPath, title, text, "/s", "true", "/p", "2")
 }
