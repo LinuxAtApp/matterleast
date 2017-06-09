@@ -25,7 +25,7 @@ ServerCom acts as a mitigator between the frontend and the mattermost model API.
 */
 type ServerCom struct {
 	Output  io.Writer // This is where the print methods will send output
-	Client  mm.Client
+	Client  Client
 	Team    mm.Team
 	Channel *mm.Channel
 }
@@ -34,7 +34,7 @@ type ServerCom struct {
 Startup accepts the url and login credentials for a user, and returns a new serverCom struct.
 */
 func Startup(url string, username string, password string, output io.Writer) (*ServerCom, error) {
-	ServerCom := &ServerCom{Client: *mm.NewClient(url), Output: output}
+	ServerCom := &ServerCom{Client: mm.NewClient(url), Output: output}
 	_, err := ServerCom.Client.Login(username, password)
 	if err != nil {
 		return nil, err
