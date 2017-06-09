@@ -6,6 +6,20 @@ import (
 	"io"
 )
 
+type Client interface {
+    Login(loginId string, password string) (*mm.Result, *mm.AppError)
+    GetTeamByName(teamName string) (*mm.Result, *mm.AppError)
+    SetTeamId(teamId string)
+    GetAllTeamListings() (*mm.Result, *mm.AppError)
+    GetChannelByName(channelName string) (*mm.Result, *mm.AppError)
+    GetChannels(etag string) (*mm.Result, *mm.AppError)
+    CreatePost(post *mm.Post) (*mm.Result, *mm.AppError)
+    GetPostsSince(channelId string, time int64) (*mm.Result, *mm.AppError)
+}
+
+// test that *mm.Client satisfies the Client interface at compile time
+var _ Client = &mm.Client{}
+
 /*
 ServerCom acts as a mitigator between the frontend and the mattermost model API.
 */
