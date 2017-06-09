@@ -3,11 +3,13 @@ package serverCom
 import (
 	"fmt"
 	mm "github.com/mattermost/platform/model"
+	"io"
 )
 /*
 ServerCom acts as a mitigator between the frontend and the mattermost model API.
 */
 type ServerCom struct {
+    	Output io.Writer // This is where the print methods will send output
 	Client mm.Client
 	Team mm.Team
 	Channel *mm.Channel
@@ -16,8 +18,8 @@ type ServerCom struct {
 /*
 Startup accepts the url and login credentials for a user, and returns a new serverCom struct.
 */
-func Startup(url string, username string, password string) (*ServerCom, error) {
-	ServerCom := &ServerCom{Client: *mm.NewClient(url)}
+func Startup(url string, username string, password string, output io.Writer) (*ServerCom, error) {
+	ServerCom := &ServerCom{Client: *mm.NewClient(url), Output: output}
 	_, err := ServerCom.Client.Login(username, password)
 	if err != nil {
 		return nil, err
@@ -58,13 +60,13 @@ func (sc *ServerCom) GetTeams() (map[string]*mm.Team, error) {
 }
 
 func (sc *ServerCom) PrintTeams() (error) {
-	fmt.Println("Teams:")
+	fmt.Fprintln(sc.Output, "Teams:")
 	teams, err := sc.GetTeams()
 	if err != nil {
     		return err
 	}
 	for name, value := range teams {
-		fmt.Println("\tName:", value.Name, "TeamID:", name)
+		fmt.Fprintln(sc.Output, "\tName:", value.Name, "TeamID:", name)
 	}
 	return nil
 }
@@ -89,14 +91,13 @@ func (sc *ServerCom) GetChannels() (*mm.ChannelList, error) {
 }
 
 func (sc *ServerCom) PrintChannels() (error){
-	fmt.Println("Channels:")
+	fmt.Fprintln(sc.Output, "Channels:")
 	channels, err := sc.GetChannels()
 	if err != nil {
     		return err
 	}
 	for id, channel := range *channels {
-		fmt.Print("\tChannelID: ", id, " ChannelName: ", channel.Name)
-		fmt.Println()
+		fmt.Fprint(sc.Output, "\tChannelID: ", id, " ChannelName: ", channel.Name, "\n")
 	}
 	return nil
 }

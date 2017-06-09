@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	client "github.com/LinuxAtApp/matterleast/servercom"
+	"os"
 )
 
 //fatal is a simple error handler that prints an error if it is not nil
@@ -31,7 +32,7 @@ func main() {
 		return
 	}
 	//Creates client and logs user in.
-	serverCom, err := client.Startup(url, *username, *password)
+	serverCom, err := client.Startup(url, *username, *password, os.Stdout)
 	fatal(err)
 	//Tests if login was successful.
 	if serverCom.Connected() {
