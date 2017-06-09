@@ -6,9 +6,9 @@ import (
 	client "github.com/LinuxAtApp/matterleast/servercom"
 )
 
-//handle is a simple error handler that prints an error if it is not nil
+//fatal is a simple error handler that prints an error if it is not nil
 //then continues with the program just to clean up code.
-func handle(err error) {
+func fatal(err error) {
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -30,7 +30,7 @@ func main() {
 	}
 	//Creates client and logs user in.
 	serverCom, err := client.Startup(url, *username, *password)
-	handle(err)
+	fatal(err)
 	//Tests if login was successful.
 	if serverCom.Connected() {
 		fmt.Println("*Connection Successful!*")
@@ -39,10 +39,10 @@ func main() {
 	}
 	serverCom.PrintTeams()
 	err = serverCom.SetTeam("linuxapp")
-	handle(err)
+	fatal(err)
 	serverCom.PrintChannels()
 	err = serverCom.SetChannel("town-square")
-	handle(err)
+	fatal(err)
 	fmt.Println("Channel [", serverCom.Channel.DisplayName, "] data:\n")
 	posts, err := serverCom.GetSelectPosts(5,3)
 	for _, post := range posts {
