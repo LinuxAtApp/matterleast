@@ -8,11 +8,12 @@ import (
 
 //handle is a simple error handler that prints an error if it is not nil
 //then continues with the program just to clean up code.
-func handle(err *mm.AppError) {
+func handle(err error) {
 	if err != nil {
 		fmt.Println(err)
 	}
 	return
+}
 /*
 Main usage: `go run main.go -u <username> -p <password> <url>
 Package demontrates simple login functions using the servercom package's methods.
@@ -28,7 +29,8 @@ func main() {
 		return
 	}
 	//Creates client and logs user in.
-	serverCom, := client.Startup(url, *username, *password)
+	serverCom, err := client.Startup(url, *username, *password)
+	handle(err)
 	//Tests if login was successful.
 	if serverCom.Connected() {
 		fmt.Println("*Connection Successful!*")
@@ -36,11 +38,14 @@ func main() {
 		fmt.Println("*You are not connected.*")
 	}
 	serverCom.PrintTeams()
-	handle( err := serverCom.SetTeam("linuxapp"))
+	err = serverCom.SetTeam("linuxapp")
+	handle(err)
 	serverCom.PrintChannels()
-	handle( err = serverCom.SetChannel("town-square"))
+	err = serverCom.SetChannel("town-square")
+	handle(err)
 	fmt.Println("Channel [", serverCom.Channel.DisplayName, "] data:\n")
-	for _, post := range serverCom.GetSelectPosts(5,3) {
+	posts, err := serverCom.GetSelectPosts(5,3)
+	for _, post := range posts {
 		fmt.Println(post.Message,"\n")
 	}
 }
