@@ -23,6 +23,7 @@ func main() {
 	username := flag.String("u", "", "Username")
 	password := flag.String("p", "", "Password")
 	team := flag.String("t", "", "Team Name")
+	channel := flag.String("c", "", "Channel Name")
 	flag.Parse()
 	url := flag.Arg(0)
 	//if any login data is missing main.go cleanly exits.
@@ -44,8 +45,11 @@ func main() {
 	}
 	err = serverCom.SetTeam(*team)
 	fatal(err)
-	serverCom.PrintChannels()
-	err = serverCom.SetChannel("town-square")
+	if *channel == "" {
+        	serverCom.PrintChannels()
+        	return
+	}
+	err = serverCom.SetChannel(*channel)
 	fatal(err)
 	fmt.Println("Channel [", serverCom.Channel.DisplayName, "] data:\n")
 	posts, err := serverCom.GetSelectPosts(5,3)
