@@ -16,7 +16,7 @@ type ServerCom struct {
 /*
 Startup accepts the url and login credentials for a user, and returns a new serverCom struct.
 */
-func Startup(url string, username string, password string) (*ServerCom, *mm.AppError) {
+func Startup(url string, username string, password string) (*ServerCom, error) {
 	ServerCom := &ServerCom{Client: *mm.NewClient(url)}
 	_, err := ServerCom.Client.Login(username, password)
 	if err != nil {
@@ -38,7 +38,7 @@ func (sc *ServerCom) Connected() bool {
 /*
 SetTeam set ServerCom's client team ID using the team name.
 */
-func (sc *ServerCom) SetTeam(teamName string) *mm.AppError {
+func (sc *ServerCom) SetTeam(teamName string) error {
 	team, err := sc.Client.GetTeamByName(teamName)
 	if err != nil {
 		return err
@@ -48,7 +48,7 @@ func (sc *ServerCom) SetTeam(teamName string) *mm.AppError {
 	return nil
 }
 
-func (sc *ServerCom) GetTeams() (map[string]*mm.Team, *mm.AppError) {
+func (sc *ServerCom) GetTeams() (map[string]*mm.Team, error) {
 	teamListResult, teamListAppError := sc.Client.GetAllTeamListings()
 	teamMap := teamListResult.Data.(map[string]*mm.Team)
 	if teamListAppError != nil {
@@ -57,7 +57,7 @@ func (sc *ServerCom) GetTeams() (map[string]*mm.Team, *mm.AppError) {
 	return teamMap, nil
 }
 
-func (sc *ServerCom) PrintTeams() (*mm.AppError) {
+func (sc *ServerCom) PrintTeams() (error) {
 	fmt.Println("Teams:")
 	teams, err := sc.GetTeams()
 	if err != nil {
@@ -69,7 +69,7 @@ func (sc *ServerCom) PrintTeams() (*mm.AppError) {
 	return nil
 }
 
-func (sc *ServerCom) SetChannel(channelName string) *mm.AppError {
+func (sc *ServerCom) SetChannel(channelName string) error {
 	channelResult, err := sc.Client.GetChannelByName(channelName)
 	if err != nil {
 		return err
@@ -80,7 +80,7 @@ func (sc *ServerCom) SetChannel(channelName string) *mm.AppError {
 
 //GetChannels returns a map with all availible channels in team.
 //**Must have successfully run SetTeam()**
-func (sc *ServerCom) GetChannels() (*mm.ChannelList, *mm.AppError) {
+func (sc *ServerCom) GetChannels() (*mm.ChannelList, error) {
 	channelResult, channelErr := sc.Client.GetChannels(sc.Team.Etag())
 	if channelErr != nil {
 		return nil, channelErr
@@ -88,7 +88,7 @@ func (sc *ServerCom) GetChannels() (*mm.ChannelList, *mm.AppError) {
 	return channelResult.Data.(*mm.ChannelList), nil
 }
 
-func (sc *ServerCom) PrintChannels() (*mm.AppError){
+func (sc *ServerCom) PrintChannels() (error){
 	fmt.Println("Channels:")
 	channels, err := sc.GetChannels()
 	if err != nil {
@@ -102,7 +102,7 @@ func (sc *ServerCom) PrintChannels() (*mm.AppError){
 }
 //GetChannelData returns a slice containing every post in a channel.
 //The posts are in order, so the newest post is at the [0] index.
-func (sc *ServerCom) GetChannelData() ([]*mm.Post, *mm.AppError) {
+func (sc *ServerCom) GetChannelData() ([]*mm.Post, error) {
 	//TownSquare Channel ID: "d5gpjz3k3fyd7fhzqrafrxg6zr"
 	//Gets mm.PostList since begining of time
 	postSinceDateResult, postsErr := sc.Client.GetPostsSince(sc.Channel.Id, 0)
@@ -121,7 +121,7 @@ func (sc *ServerCom) GetChannelData() ([]*mm.Post, *mm.AppError) {
 //GetSelectPosts returns a slice selection of posts.
 //Offset (int) is how many posts back the newest post in the slice will be.
 //Postcount is the number of posts before (and including) the offset that will be in the slice.
-func (sc *ServerCom) GetSelectPosts(offset int, postCount int) ([]*mm.Post, *mm.AppError){
+func (sc *ServerCom) GetSelectPosts(offset int, postCount int) ([]*mm.Post, error){
 	postList, err := sc.GetChannelData()
 	if err != nil {
     		return nil, err
@@ -136,7 +136,7 @@ func (sc *ServerCom) GetSelectPosts(offset int, postCount int) ([]*mm.Post, *mm.
 /*
 NewPost creates and pushes a post to the channel in channelId.
 */
-func (sc *ServerCom) NewPost(message string) *mm.AppError {
+func (sc *ServerCom) NewPost(message string) error {
 	post := &mm.Post{}
 	post.ChannelId = sc.Channel.Id
 	post.Message = message
