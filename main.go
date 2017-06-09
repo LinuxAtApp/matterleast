@@ -12,8 +12,8 @@ import (
 func fatal(err error) {
 	if err != nil {
 		fmt.Println(err)
+        	os.Exit(1)
 	}
-	return
 }
 /*
 Main usage: `go run main.go -u <username> -p <password> <url>
