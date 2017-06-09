@@ -129,6 +129,12 @@ func (sc *ServerCom) GetSelectPosts(offset int, postCount int) ([]*mm.Post, erro
 	if err != nil {
 		return nil, err
 	}
+	if offset > len(postList)  {
+    		return nil, fmt.Errorf("Index out of bounds, len(postList)=%d, offset=%d, postCount=%d", len(postList), offset, postCount)
+	}
+	if offset + postCount > len(postList) {
+        	postCount = len(postList) - offset
+	}
 	return postList[offset:offset+postCount], nil
 }
 
