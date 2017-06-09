@@ -129,11 +129,7 @@ func (sc *ServerCom) GetSelectPosts(offset int, postCount int) ([]*mm.Post, erro
 	if err != nil {
 		return nil, err
 	}
-	selectPosts := make([]*mm.Post, postCount)
-	for i := 0; i < postCount; i++ {
-		selectPosts[i] = postList[i+offset]
-	}
-	return selectPosts, nil
+	return postList[offset:offset+postCount], nil
 }
 
 /*
