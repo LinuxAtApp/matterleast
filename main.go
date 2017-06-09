@@ -54,8 +54,14 @@ func main() {
 	err = serverCom.SetChannel(*channel)
 	fatal(err)
 	fmt.Println("Channel [", serverCom.Channel.DisplayName, "] data:\n")
-	posts, err := serverCom.GetSelectPosts(5, 3)
-	for _, post := range posts {
-		fmt.Println(post.Message, "\n")
+	currentPost := 0
+	numPosts := 1
+	for {
+        	posts, err := serverCom.GetSelectPosts(currentPost, numPosts)
+        	fatal(err)
+        	for _, post := range posts {
+        		fmt.Println(post.Message, "\n")
+        	}
+        	currentPost++
 	}
 }
