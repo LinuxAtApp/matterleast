@@ -22,6 +22,7 @@ func main() {
 	fmt.Println("matterleast")
 	username := flag.String("u", "", "Username")
 	password := flag.String("p", "", "Password")
+	team := flag.String("t", "", "Team Name")
 	flag.Parse()
 	url := flag.Arg(0)
 	//if any login data is missing main.go cleanly exits.
@@ -37,8 +38,11 @@ func main() {
 	} else {
 		fmt.Println("*You are not connected.*")
 	}
-	serverCom.PrintTeams()
-	err = serverCom.SetTeam("linuxapp")
+	if *team == "" {
+        	serverCom.PrintTeams()
+        	return
+	}
+	err = serverCom.SetTeam(*team)
 	fatal(err)
 	serverCom.PrintChannels()
 	err = serverCom.SetChannel("town-square")
