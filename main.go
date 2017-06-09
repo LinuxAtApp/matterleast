@@ -12,9 +12,10 @@ import (
 func fatal(err error) {
 	if err != nil {
 		fmt.Println(err)
-        	os.Exit(1)
+		os.Exit(1)
 	}
 }
+
 /*
 Main usage: `go run main.go -u <username> -p <password> <url>
 Package demontrates simple login functions using the servercom package's methods.
@@ -28,7 +29,7 @@ func main() {
 	flag.Parse()
 	url := flag.Arg(0)
 	//if any login data is missing main.go cleanly exits.
-	if (url == "" || *username == "" || *password == "") {
+	if url == "" || *username == "" || *password == "" {
 		return
 	}
 	//Creates client and logs user in.
@@ -41,21 +42,20 @@ func main() {
 		fmt.Println("*You are not connected.*")
 	}
 	if *team == "" {
-        	serverCom.PrintTeams()
-        	return
+		serverCom.PrintTeams()
+		return
 	}
 	err = serverCom.SetTeam(*team)
 	fatal(err)
 	if *channel == "" {
-        	serverCom.PrintChannels()
-        	return
+		serverCom.PrintChannels()
+		return
 	}
 	err = serverCom.SetChannel(*channel)
 	fatal(err)
 	fmt.Println("Channel [", serverCom.Channel.DisplayName, "] data:\n")
-	posts, err := serverCom.GetSelectPosts(5,3)
+	posts, err := serverCom.GetSelectPosts(5, 3)
 	for _, post := range posts {
-		fmt.Println(post.Message,"\n")
+		fmt.Println(post.Message, "\n")
 	}
 }
-

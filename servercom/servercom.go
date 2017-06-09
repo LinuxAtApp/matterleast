@@ -5,13 +5,14 @@ import (
 	mm "github.com/mattermost/platform/model"
 	"io"
 )
+
 /*
 ServerCom acts as a mitigator between the frontend and the mattermost model API.
 */
 type ServerCom struct {
-    	Output io.Writer // This is where the print methods will send output
-	Client mm.Client
-	Team mm.Team
+	Output  io.Writer // This is where the print methods will send output
+	Client  mm.Client
+	Team    mm.Team
 	Channel *mm.Channel
 }
 
@@ -59,11 +60,11 @@ func (sc *ServerCom) GetTeams() (map[string]*mm.Team, error) {
 	return teamMap, nil
 }
 
-func (sc *ServerCom) PrintTeams() (error) {
+func (sc *ServerCom) PrintTeams() error {
 	fmt.Fprintln(sc.Output, "Teams:")
 	teams, err := sc.GetTeams()
 	if err != nil {
-    		return err
+		return err
 	}
 	for name, value := range teams {
 		fmt.Fprintln(sc.Output, "\tName:", value.Name, "TeamID:", name)
@@ -90,17 +91,18 @@ func (sc *ServerCom) GetChannels() (*mm.ChannelList, error) {
 	return channelResult.Data.(*mm.ChannelList), nil
 }
 
-func (sc *ServerCom) PrintChannels() (error){
+func (sc *ServerCom) PrintChannels() error {
 	fmt.Fprintln(sc.Output, "Channels:")
 	channels, err := sc.GetChannels()
 	if err != nil {
-    		return err
+		return err
 	}
 	for id, channel := range *channels {
 		fmt.Fprint(sc.Output, "\tChannelID: ", id, " ChannelName: ", channel.Name, "\n")
 	}
 	return nil
 }
+
 //GetChannelData returns a slice containing every post in a channel.
 //The posts are in order, so the newest post is at the [0] index.
 func (sc *ServerCom) GetChannelData() ([]*mm.Post, error) {
@@ -122,18 +124,18 @@ func (sc *ServerCom) GetChannelData() ([]*mm.Post, error) {
 //GetSelectPosts returns a slice selection of posts.
 //Offset (int) is how many posts back the newest post in the slice will be.
 //Postcount is the number of posts before (and including) the offset that will be in the slice.
-func (sc *ServerCom) GetSelectPosts(offset int, postCount int) ([]*mm.Post, error){
+func (sc *ServerCom) GetSelectPosts(offset int, postCount int) ([]*mm.Post, error) {
 	postList, err := sc.GetChannelData()
 	if err != nil {
-    		return nil, err
+		return nil, err
 	}
 	selectPosts := make([]*mm.Post, postCount)
 	for i := 0; i < postCount; i++ {
-		selectPosts[i] = postList[i + offset]
+		selectPosts[i] = postList[i+offset]
 	}
 	return selectPosts, nil
 }
-	
+
 /*
 NewPost creates and pushes a post to the channel in channelId.
 */
