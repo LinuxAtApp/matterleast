@@ -43,16 +43,6 @@ func Startup(url string, username string, password string, output io.Writer) (*S
 }
 
 /*
-Connected returns true if the client has a login Authentication Token.
-*/
-func (sc *ServerCom) Connected() bool {
-	if sc.Client.AuthToken != "" {
-		return true
-	}
-	return false
-}
-
-/*
 SetTeam set ServerCom's client team ID using the team name.
 */
 func (sc *ServerCom) SetTeam(teamName string) error {

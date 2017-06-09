@@ -35,12 +35,6 @@ func main() {
 	//Creates client and logs user in.
 	serverCom, err := client.Startup(url, *username, *password, os.Stdout)
 	fatal(err)
-	//Tests if login was successful.
-	if serverCom.Connected() {
-		fmt.Println("*Connection Successful!*")
-	} else {
-		fmt.Println("*You are not connected.*")
-	}
 	if *team == "" {
 		serverCom.PrintTeams()
 		return
