@@ -17,7 +17,7 @@ type ServerCom struct {
 Startup accepts the url and login credentials for a user, and returns a new serverCom struct.
 */
 func Startup(url string, username string, password string) (*ServerCom, *mm.AppError) {
-	ServerCom := ServerCom{Client: *mm.NewClient(url)}
+	ServerCom := &ServerCom{Client: *mm.NewClient(url)}
 	_, err := ServerCom.Client.Login(username, password)
 	if err != nil {
 		return nil, err
@@ -57,11 +57,16 @@ func (sc *ServerCom) GetTeams() (map[string]*mm.Team, *mm.AppError) {
 	return teamMap, nil
 }
 
-func (sc *ServerCom) PrintTeams() {
+func (sc *ServerCom) PrintTeams() (*mm.AppError) {
 	fmt.Println("Teams:")
-	for name, value := range sc.GetTeams() {
+	teams, err := sc.GetTeams()
+	if err != nil {
+    		return err
+	}
+	for name, value := range teams {
 		fmt.Println("\tName:", value.Name, "TeamID:", name)
 	}
+	return nil
 }
 
 func (sc *ServerCom) SetChannel(channelName string) *mm.AppError {
@@ -83,12 +88,17 @@ func (sc *ServerCom) GetChannels() (*mm.ChannelList, *mm.AppError) {
 	return channelResult.Data.(*mm.ChannelList), nil
 }
 
-func (sc *ServerCom) PrintChannels() {
+func (sc *ServerCom) PrintChannels() (*mm.AppError){
 	fmt.Println("Channels:")
-	for id, channel := range *sc.GetChannels() {
+	channels, err := sc.GetChannels()
+	if err != nil {
+    		return err
+	}
+	for id, channel := range *channels {
 		fmt.Print("\tChannelID: ", id, " ChannelName: ", channel.Name)
 		fmt.Println()
 	}
+	return nil
 }
 //GetChannelData returns a slice containing every post in a channel.
 //The posts are in order, so the newest post is at the [0] index.
@@ -111,13 +121,16 @@ func (sc *ServerCom) GetChannelData() ([]*mm.Post, *mm.AppError) {
 //GetSelectPosts returns a slice selection of posts.
 //Offset (int) is how many posts back the newest post in the slice will be.
 //Postcount is the number of posts before (and including) the offset that will be in the slice.
-func (sc *ServerCom) GetSelectPosts(offset int, postCount int) []*mm.Post{
-	postList := sc.GetChannelData()
+func (sc *ServerCom) GetSelectPosts(offset int, postCount int) ([]*mm.Post, *mm.AppError){
+	postList, err := sc.GetChannelData()
+	if err != nil {
+    		return nil, err
+	}
 	selectPosts := make([]*mm.Post, postCount)
 	for i := 0; i < postCount; i++ {
 		selectPosts[i] = postList[i + offset]
 	}
-	return selectPosts
+	return selectPosts, nil
 }
 	
 /*
