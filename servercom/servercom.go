@@ -1,4 +1,4 @@
-package serverCom
+package servercom
 
 import (
 	"fmt"
