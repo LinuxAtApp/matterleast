@@ -1,7 +1,6 @@
 package servercom
 
 import (
-	"fmt"
 	mm "github.com/mattermost/platform/model"
 )
 
@@ -16,6 +15,29 @@ type Client interface {
     GetPostsSince(channelId string, time int64) (*mm.Result, *mm.AppError)
 }
 
+// WSClient is a websocket client to the mattermost server
+type WSClient interface {
+    Close()
+    Listen()
+    Events() chan *mm.WebSocketEvent
+}
+
+// wsWrapper wraps an existing websocket client implementation so that the event
+// channel can be accessed via a method (rather than as a field). This allow us
+// to hide the WSClient completely behind an interface and swap the implementation
+// in the future if need be.
+type wsWrapper struct {
+    *mm.WebSocketClient
+}
+
+// Events returns the stream of realtime events from the mattermost server.
+func (w *wsWrapper) Events() chan *mm.WebSocketEvent {
+    return w.WebSocketClient.EventChannel
+}
+
+// test that wsWrapper implements WSClient at compile-time
+var _ WSClient = &wsWrapper{}
+
 // test that *mm.Client satisfies the Client interface at compile time
 var _ Client = &mm.Client{}
 
@@ -26,6 +48,8 @@ type ServerCom struct {
 	Client  Client
 	Team    mm.Team
 	Channel *mm.Channel
+	Events  chan *mm.WebSocketEvent
+	Responses chan *mm.WebSocketResponse
 }
 
 /*
@@ -79,41 +103,6 @@ func (sc *ServerCom) GetChannels() (*mm.ChannelList, error) {
 		return nil, channelErr
 	}
 	return channelResult.Data.(*mm.ChannelList), nil
-}
-
-//GetChannelData returns a slice containing every post in a channel.
-//The posts are in order, so the newest post is at the [0] index.
-func (sc *ServerCom) GetChannelData() ([]*mm.Post, error) {
-	//TownSquare Channel ID: "d5gpjz3k3fyd7fhzqrafrxg6zr"
-	//Gets mm.PostList since begining of time
-	postSinceDateResult, postsErr := sc.Client.GetPostsSince(sc.Channel.Id, 0)
-	if postsErr != nil {
-		return nil, postsErr
-	}
-	//Extracts Posts in order into postsSLice
-	postSinceDate := postSinceDateResult.Data.(*mm.PostList)
-	postsSlice := make([]*mm.Post, len(postSinceDate.Order))
-	for index, key := range postSinceDate.Order {
-		postsSlice[index] = postSinceDate.Posts[key]
-	}
-	return postsSlice, nil
-}
-
-//GetSelectPosts returns a slice selection of posts.
-//Offset (int) is how many posts back the newest post in the slice will be.
-//Postcount is the number of posts before (and including) the offset that will be in the slice.
-func (sc *ServerCom) GetSelectPosts(offset int, postCount int) ([]*mm.Post, error) {
-	postList, err := sc.GetChannelData()
-	if err != nil {
-		return nil, err
-	}
-	if offset > len(postList)  {
-    		return nil, fmt.Errorf("Index out of bounds, len(postList)=%d, offset=%d, postCount=%d", len(postList), offset, postCount)
-	}
-	if offset + postCount > len(postList) {
-        	postCount = len(postList) - offset
-	}
-	return postList[offset:offset+postCount], nil
 }
 
 /*
