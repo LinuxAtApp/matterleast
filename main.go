@@ -33,17 +33,23 @@ func main() {
 		return
 	}
 	//Creates client and logs user in.
-	serverCom, err := client.Startup(url, *username, *password, os.Stdout)
+	serverCom, err := client.Startup(url, *username, *password)
 	fatal(err)
 	if *team == "" {
-		serverCom.PrintTeams()
-		return
+		teams, err := serverCom.GetTeams()
+                for _, team := range teams {
+    			fmt.Println(team)
+		}
+		fatal(err)
 	}
 	err = serverCom.SetTeam(*team)
 	fatal(err)
 	if *channel == "" {
-		serverCom.PrintChannels()
-		return
+    		channels, err := serverCom.GetChannels()
+    		for _, channel := range *channels {
+        		fmt.Println(channel)
+    		}
+    		fatal(err)
 	}
 	err = serverCom.SetChannel(*channel)
 	fatal(err)
