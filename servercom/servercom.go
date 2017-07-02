@@ -2,6 +2,8 @@ package servercom
 
 import (
 	mm "github.com/mattermost/platform/model"
+	"net/url"
+	"github.com/pkg/errors"
 )
 
 type (
@@ -70,7 +72,7 @@ var NewClient ClientFactory = func(url string) Client {
 var NewWSClient WSClientFactory = func(url, authToken string) (WSClient, error) {
 	wsc, err := mm.NewWebSocketClient(url, authToken)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrapf(err, "Unable to connect via websocket")
 	}
 	return &wsWrapper{wsc}, nil
 }
@@ -78,17 +80,24 @@ var NewWSClient WSClientFactory = func(url, authToken string) (WSClient, error) 
 /*
 Startup accepts the url and login credentials for a user, and returns a new serverCom struct.
 */
-func Startup(url string, username string, password string) (*ServerCom, error) {
-	sc := &ServerCom{Client: NewClient(url)}
+func Startup(serverUrl string, username string, password string) (*ServerCom, error) {
+	sc := &ServerCom{Client: NewClient(serverUrl)}
 	_, err := sc.Client.Login(username, password)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrapf(err, "Login to server failed")
 	}
-	wsc, e := NewWSClient(url, sc.Client.AuthToken())
-	if e!= nil {
-		return nil, e
+	parsed, e := url.Parse(serverUrl)
+	if e != nil {
+		return nil, errors.Wrapf(e, "Failed to parse url")
+	}
+	parsed.Scheme = "wss"
+	wsc, e := NewWSClient(parsed.String(), sc.Client.AuthToken())
+	if e != nil {
+		return nil, errors.Wrapf(e, "Failed to construct WSClient")
 	}
 	sc.WSClient = wsc
+	sc.WSClient.Listen()
+	sc.Events = sc.WSClient.Events()
 	return sc, nil
 }
 
