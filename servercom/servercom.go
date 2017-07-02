@@ -14,6 +14,7 @@ type (
 		GetChannels(etag string) (*mm.Result, *mm.AppError)
 		CreatePost(post *mm.Post) (*mm.Result, *mm.AppError)
 		GetPostsSince(channelId string, time int64) (*mm.Result, *mm.AppError)
+		AuthToken() string
 	}
 
 	// WSClient is a websocket client to the mattermost server
@@ -21,6 +22,10 @@ type (
 		Close()
 		Listen()
 		Events() chan *mm.WebSocketEvent
+	}
+
+	clientWrapper struct {
+    		*mm.Client
 	}
 
 	// wsWrapper wraps an existing websocket client implementation so that the event
@@ -33,11 +38,11 @@ type (
 
 	// ServerCom acts as a mitigator between the frontend and the mattermost model API.
 	ServerCom struct {
-		Client    Client
+		Client
+		WSClient  
 		Team      mm.Team
 		Channel   *mm.Channel
 		Events    chan *mm.WebSocketEvent
-		Responses chan *mm.WebSocketResponse
 	}
 
 	ClientFactory   func(url string) Client
@@ -49,14 +54,18 @@ func (w *wsWrapper) Events() chan *mm.WebSocketEvent {
 	return w.WebSocketClient.EventChannel
 }
 
+func (c *clientWrapper) AuthToken() string {
+    	return c.Client.AuthToken
+}
+
 // test that wsWrapper implements WSClient at compile-time
 var _ WSClient = &wsWrapper{}
 
 // test that *mm.Client satisfies the Client interface at compile time
-var _ Client = &mm.Client{}
+var _ Client = &clientWrapper{}
 
 var NewClient ClientFactory = func(url string) Client {
-	return mm.NewClient(url)
+	return &clientWrapper{mm.NewClient(url)}
 }
 var NewWSClient WSClientFactory = func(url, authToken string) (WSClient, error) {
 	wsc, err := mm.NewWebSocketClient(url, authToken)
@@ -70,12 +79,17 @@ var NewWSClient WSClientFactory = func(url, authToken string) (WSClient, error) 
 Startup accepts the url and login credentials for a user, and returns a new serverCom struct.
 */
 func Startup(url string, username string, password string) (*ServerCom, error) {
-	ServerCom := &ServerCom{Client: NewClient(url)}
-	_, err := ServerCom.Client.Login(username, password)
+	sc := &ServerCom{Client: NewClient(url)}
+	_, err := sc.Client.Login(username, password)
 	if err != nil {
 		return nil, err
 	}
-	return ServerCom, nil
+	wsc, e := NewWSClient(url, sc.Client.AuthToken())
+	if e!= nil {
+		return nil, e
+	}
+	sc.WSClient = wsc
+	return sc, nil
 }
 
 /*
